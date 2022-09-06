@@ -15,7 +15,7 @@ To be able to use XenCrypt, you will need to use a private key provided by Xendi
 ```android
 import XenCrypt
 try {
-    val xenKey = Base64.encode("BASE64_ENCODED_KEY_PROVIDED_BY_XENDIT".toByteArray())
+    val xenKey = Base64.encode("BASE64_ENCODED_KEY_PROVIDED_BY_XENDIT")
     val xenCrypt = XenCrypt(xenKey);
 
     // sessionKey - randomly generated 32 length string, use xenCrypt.getSessionKey(), or implement own
