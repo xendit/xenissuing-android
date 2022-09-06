@@ -12,31 +12,20 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.Exception
 
-data class SessionIdData(val iv: String, val sessionId: String)
+data class SessionIdData(val iv: String, val encryptedSessionKey: String)
 
-class XenCrypt constructor(publicKey: String?) {
+class XenCrypt constructor(xenditKey: String) {
     private val cipher: Cipher
-    private val publicKey: String
+    private val xenditKey: String
     private val asymmetricCryptography: AsymmetricCryptography
 
     init {
         Security.addProvider(BouncyCastleProvider())
         this.cipher = Cipher.getInstance(
-            "AES/CBC/PKCS7Padding",
-            BouncyCastleProvider.PROVIDER_NAME
+            "AES/CBC/PKCS7Padding"
         )
-        val decodedPublicKey: String
-
         this.asymmetricCryptography = AsymmetricCryptography(this.cipher)
-        try {
-            val byteArray = Base64.decode(publicKey, Base64.NO_WRAP)
-            decodedPublicKey = String(byteArray, StandardCharsets.UTF_8)
-
-        } catch (error: Exception) {
-            throw WrongPublicKeyError(error.message)
-        }
-
-        this.publicKey = decodedPublicKey
+        this.xenditKey = xenditKey
     }
 
     /**
@@ -45,10 +34,23 @@ class XenCrypt constructor(publicKey: String?) {
      */
     fun generateSessionId(sessionKey: String): SessionIdData{
         try {
-            val publicKey = asymmetricCryptography.getPublicKey(this.publicKey)
-            val sessionId = asymmetricCryptography.encrypt(sessionKey, publicKey)
-            val iv = this.ivKeyGenerator()
-            return SessionIdData(iv, sessionId);
+            val ivB64 = this.ivKeyGenerator()
+            val decodedKey: ByteArray = Base64.decode(
+                this.xenditKey,
+                Base64.NO_WRAP
+            )  // use 32 characters session key generated at first step
+
+            val aesKey: SecretKey = SecretKeySpec(decodedKey, 0, decodedKey.size, "AES")
+            val iv: ByteArray = Base64.decode(ivB64, Base64.NO_WRAP)
+            val ivSpec = IvParameterSpec(iv)
+
+            val aeseCipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
+            aeseCipher.init(Cipher.ENCRYPT_MODE, aesKey, ivSpec)
+            val utf8 = sessionKey.toByteArray(charset("UTF8"))
+            val encryptedSessionKey = aeseCipher.doFinal(utf8)
+            val encrypted = String(BASE64EncoderStream.encode(encryptedSessionKey))
+
+            return SessionIdData(ivB64, encrypted);
         } catch (error: SessionIdError) {
             throw SessionIdError(error.message)
         }
@@ -96,7 +98,7 @@ class XenCrypt constructor(publicKey: String?) {
     @Throws(Exception::class)
     fun getSessionKey(): String {
         val secureRandom = SecureRandom.getInstance("SHA1PRNG")
-        val byteArray = ByteArray(24)
+        val byteArray = ByteArray(32)
         secureRandom.nextBytes(byteArray)
         return String(Base64.encode(byteArray, Base64.NO_WRAP))
     }

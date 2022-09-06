@@ -12,31 +12,14 @@ import org.junit.jupiter.api.Test
 import utils.DecryptionError
 import utils.EncryptionError
 import utils.WrongPublicKeyError
-import java.nio.charset.StandardCharsets
 import java.security.*
 
-fun encodeKey(keyBytes: ByteArray): String {
-    return String(java.util.Base64.getMimeEncoder().encode(keyBytes), StandardCharsets.UTF_8)
+fun generateXenditKey(): String {
+    val secureRandom = SecureRandom.getInstance("SHA1PRNG")
+    val byteArray = ByteArray(32)
+    secureRandom.nextBytes(byteArray)
+    return String(Base64.encode(byteArray, Base64.NO_WRAP))
 }
-
-fun generatePublicKey(): String {
-    val kp: KeyPair?
-    val kpg: KeyPairGenerator = KeyPairGenerator.getInstance("RSA")
-    kpg.initialize(2048)
-    kp = kpg.generateKeyPair()
-
-    val publicKey: PublicKey = kp.public
-    val publicKeyBytes: String = encodeKey(publicKey.getEncoded())
-
-    return addHeaders(publicKeyBytes)
-}
-
-fun addHeaders(key: String): String {
-    val headLine = "-----BEGIN PUBLIC KEY-----\n"
-    val footLine = "\n-----END PUBLIC KEY-----"
-    return headLine + key + footLine
-}
-
 class XenCryptUnitTest{
     companion object {
         init {
@@ -67,26 +50,29 @@ class XenCryptUnitTest{
             }
         }
     }
-    val generatedRsaPublic = generatePublicKey()
-    var RSA_PUBLIC = java.util.Base64.getEncoder().encode(generatedRsaPublic.toByteArray())
 
     @Test
-    @DisplayName("Test session-id generation")
+    @DisplayName("Test session-id data generation")
     fun generateSessionId() {
-        val base64regex = Regex("^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?\$")
-        val xenCrypt = XenCrypt(String(RSA_PUBLIC))
+        val xenditKey = generateXenditKey()
+
+        val xenCrypt = XenCrypt(xenditKey)
         val sessionKey = xenCrypt.getSessionKey()
         val sessionData = xenCrypt.generateSessionId(sessionKey)
 
-        base64regex.matches(sessionData.sessionId)
-        assertEquals(base64regex.matches(sessionData.sessionId), true)
+        val decodedKey: ByteArray = Base64.decode(sessionData.encryptedSessionKey, Base64.NO_WRAP)
+        val decodedIv: ByteArray = Base64.decode(sessionData.iv, Base64.NO_WRAP)
+
+        assertEquals(decodedKey.size, 48)
+        assertEquals(decodedIv.size, 16)
     }
 
     @Test
     @DisplayName("should decrypt plain text")
     fun decrypt() {
+        val xenditKey = generateXenditKey()
         val plain = "test"
-        val xenCrypt = XenCrypt(String(RSA_PUBLIC))
+        val xenCrypt = XenCrypt(xenditKey)
         val sessionKey = xenCrypt.getSessionKey()
         val iv = xenCrypt.ivKeyGenerator()
         val encryptedSecret = xenCrypt.encryption(plain, sessionKey, iv)
@@ -98,8 +84,9 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("should not decrypt plain text if provided different session key then was provided during encryption")
     fun decryptWithWrongPrivatKey() {
+        val xenditKey = generateXenditKey()
         val plain = "test"
-        val xenCrypt = XenCrypt(String(RSA_PUBLIC))
+        val xenCrypt = XenCrypt(xenditKey)
         val privateEncryptionKey = xenCrypt.getSessionKey()
         val privateDecryptionKey = xenCrypt.getSessionKey()
         val iv = xenCrypt.ivKeyGenerator()
@@ -115,8 +102,9 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("should not decrypt plain text if provided different iv then was provided during encryption")
     fun decryptWithWrongIv() {
+        val xenditKey = generateXenditKey()
         val plain = "test"
-        val xenCrypt = XenCrypt(String(RSA_PUBLIC))
+        val xenCrypt = XenCrypt(xenditKey)
         val privateKey = xenCrypt.getSessionKey()
         val iv = xenCrypt.ivKeyGenerator()
         val secondIv = xenCrypt.ivKeyGenerator()
@@ -132,8 +120,9 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("should throw an error if passed wrong public key")
     fun insertWrongPublicKey() {
+        val xenditKey = generateXenditKey()
         try {
-            XenCrypt(generatedRsaPublic)
+            XenCrypt(xenditKey)
         } catch (error: WrongPublicKeyError) {
             error.message?.contains("Something happen while decoding publicKey")
                 ?.let { assertTrue(it) }
@@ -143,8 +132,9 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("should throw an error during decryption if the provided session key is more than 32 bytes")
     fun insertWrongPrivateKey() {
+        val xenditKey = generateXenditKey()
         val plain = "test"
-        val xenCrypt = XenCrypt(String(RSA_PUBLIC))
+        val xenCrypt = XenCrypt(xenditKey)
 
         val secureRandom = SecureRandom.getInstance("SHA1PRNG")
         // Wrong length
@@ -164,8 +154,9 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("should not decrypt plain text if the provided during decryption iv is not encoded")
     fun insertWrongIv() {
+        val xenditKey = generateXenditKey()
         val plain = "test"
-        val xenCrypt = XenCrypt(String(RSA_PUBLIC))
+        val xenCrypt = XenCrypt(xenditKey)
 
         val privateKey = xenCrypt.getSessionKey()
         // Generate wrong iv
