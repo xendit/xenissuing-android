@@ -14,4 +14,4 @@ jobs:
 
       # Execute unit tests
       - name: Unit Test
-        run: ExampleUnitTest
+        run: ./gradlew test
