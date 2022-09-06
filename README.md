@@ -17,10 +17,15 @@ import XenCrypt
 try {
     val xenKey = Base64.encode("BASE64_ENCODED_KEY_PROVIDED_BY_XENDIT".toByteArray())
     val xenCrypt = XenCrypt(xenKey);
+
+    // sessionKey - randomly generated 32 length string, use xenCrypt.getSessionKey(), or implement own
+
     val sessionData = xenCrypt.generateSessionId(sessionKey)
 
     val decrypted = xenCrypt.decrypt(secret, iv, privateKey);
-
+    
+    // plain - plain text to be encrypted (cvv2 ect..)
+    
     val encrypted = xenCrypt.encryption(plain, privateKey, iv)
 } catch (error: Exception) {
     throw error
