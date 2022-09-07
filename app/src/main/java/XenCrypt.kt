@@ -1,6 +1,7 @@
 import android.util.Base64
 import com.sun.mail.util.BASE64DecoderStream
 import com.sun.mail.util.BASE64EncoderStream
+import org.apache.commons.io.output.ByteArrayOutputStream
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import utils.*
 import java.nio.charset.StandardCharsets
@@ -32,13 +33,13 @@ class XenCrypt constructor(xenditKey: String) {
      * Returns generated Session ID using RSA Public Key.
      * @param {string} sessionKey base64 encoded session key.
      */
-    fun generateSessionId(sessionKey: String): SessionIdData{
+    fun generateSessionId(sessionKey: String): String{
         try {
             val ivB64 = this.ivKeyGenerator()
             val decodedKey: ByteArray = Base64.decode(
                 this.xenditKey,
                 Base64.NO_WRAP
-            )  // use 32 characters session key generated at first step
+            )
 
             val aesKey: SecretKey = SecretKeySpec(decodedKey, 0, decodedKey.size, "AES")
             val iv: ByteArray = Base64.decode(ivB64, Base64.NO_WRAP)
@@ -46,11 +47,18 @@ class XenCrypt constructor(xenditKey: String) {
 
             val aeseCipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
             aeseCipher.init(Cipher.ENCRYPT_MODE, aesKey, ivSpec)
-            val utf8 = sessionKey.toByteArray(charset("UTF8"))
+            val utf8: ByteArray = Base64.decode(
+                sessionKey,
+                Base64.NO_WRAP
+            )
             val encryptedSessionKey = aeseCipher.doFinal(utf8)
-            val encrypted = String(BASE64EncoderStream.encode(encryptedSessionKey))
 
-            return SessionIdData(ivB64, encrypted);
+            val outputStream = ByteArrayOutputStream()
+            outputStream.write(iv)
+            outputStream.write(encryptedSessionKey)
+            val byteArray = outputStream.toByteArray();
+
+            return Base64.encodeToString(byteArray, Base64.DEFAULT)
         } catch (error: SessionIdError) {
             throw SessionIdError(error.message)
         }
@@ -98,7 +106,7 @@ class XenCrypt constructor(xenditKey: String) {
     @Throws(Exception::class)
     fun getSessionKey(): String {
         val secureRandom = SecureRandom.getInstance("SHA1PRNG")
-        val byteArray = ByteArray(32)
+        val byteArray = ByteArray(24)
         secureRandom.nextBytes(byteArray)
         return String(Base64.encode(byteArray, Base64.NO_WRAP))
     }
