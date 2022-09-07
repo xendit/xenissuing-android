@@ -5,6 +5,9 @@ import android.util.Base64
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.slot
+import org.apache.commons.io.output.ByteArrayOutputStream
+import org.eclipse.jgit.diff.Subsequence.a
+import org.eclipse.jgit.diff.Subsequence.b
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -55,16 +58,12 @@ class XenCryptUnitTest{
     @DisplayName("Test session-id data generation")
     fun generateSessionId() {
         val xenditKey = generateXenditKey()
-
         val xenCrypt = XenCrypt(xenditKey)
         val sessionKey = xenCrypt.getSessionKey()
-        val sessionData = xenCrypt.generateSessionId(sessionKey)
+        val sessionId = xenCrypt.generateSessionId(sessionKey)
+        val decodedSessionId: ByteArray = Base64.decode(sessionId, Base64.NO_WRAP)
 
-        val decodedKey: ByteArray = Base64.decode(sessionData.encryptedSessionKey, Base64.NO_WRAP)
-        val decodedIv: ByteArray = Base64.decode(sessionData.iv, Base64.NO_WRAP)
-
-        assertEquals(decodedKey.size, 48)
-        assertEquals(decodedIv.size, 16)
+        assertEquals(decodedSessionId.size, 48)
     }
 
     @Test
