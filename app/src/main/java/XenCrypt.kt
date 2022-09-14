@@ -13,8 +13,6 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.Exception
 
-data class SessionIdData(val iv: String, val encryptedSessionKey: String)
-
 class XenCrypt constructor(xenditKey: String) {
     private val cipher: Cipher
     private val xenditKey: String
@@ -30,7 +28,7 @@ class XenCrypt constructor(xenditKey: String) {
     }
 
     /**
-     * Returns generated Session ID using RSA Public Key.
+     * Returns generated Session ID using Private Xendit Key
      * @param {string} sessionKey base64 encoded session key.
      */
     fun generateSessionId(sessionKey: String): String{
