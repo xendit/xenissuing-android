@@ -1,5 +1,5 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.apollographql.federation/federation-graphql-java-support.svg)](https://maven-badges.herokuapp.com/maven-central/com.apollographql.federation/federation-graphql-java-support)
-[Maven Central](https://img.shields.io/badge/JVM-%3E%3D11-brightgreen)
+![Java Support](https://img.shields.io/badge/JVM-%3E%3D11-brightgreen)
 
 # Xenissuing
 
