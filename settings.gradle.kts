@@ -5,12 +5,15 @@ pluginManagement {
         mavenCentral()
     }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+//    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
     }
 }
+
+rootProject.buildFileName = "build.gradle.kts"
 rootProject.name = "xenissuing-android"
-include ':app'
+include("xenissuing-android-lib")

@@ -1,20 +1,17 @@
 package com.example.xenissuing_android
 
-import XenCrypt
 import android.util.Base64
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.slot
-import org.apache.commons.io.output.ByteArrayOutputStream
-import org.eclipse.jgit.diff.Subsequence.a
-import org.eclipse.jgit.diff.Subsequence.b
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import utils.DecryptionError
-import utils.EncryptionError
-import utils.WrongPublicKeyError
+import com.xendit.xenissuing.utils.DecryptionError
+import com.xendit.xenissuing.utils.EncryptionError
+import com.xendit.xenissuing.utils.WrongPublicKeyError
+import com.xendit.xenissuing.XenCrypt
 import java.security.*
 
 fun generateXenditKey(): String {

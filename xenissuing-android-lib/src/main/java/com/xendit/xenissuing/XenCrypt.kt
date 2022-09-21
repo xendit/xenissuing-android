@@ -1,10 +1,14 @@
+package com.xendit.xenissuing
+
 import android.util.Base64
 import com.sun.mail.util.BASE64DecoderStream
 import com.sun.mail.util.BASE64EncoderStream
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import utils.*
-import java.nio.charset.StandardCharsets
+import com.xendit.xenissuing.utils.AsymmetricCryptography
+import com.xendit.xenissuing.utils.DecryptionError
+import com.xendit.xenissuing.utils.EncryptionError
+import com.xendit.xenissuing.utils.SessionIdError
 import java.security.*
 import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher

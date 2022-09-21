@@ -1,4 +1,4 @@
-package utils
+package com.xendit.xenissuing.utils
 
 import android.util.Base64
 import org.apache.commons.codec.binary.Base64.encodeBase64String as encodeBase64String
