@@ -1,4 +1,4 @@
-package utils
+package com.xendit.xenissuing.utils
 
 class DecryptionError(message: String?) : Exception("Failed to decrypt: $message")
 
