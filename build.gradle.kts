@@ -39,8 +39,8 @@
 
  println(System.getenv("OSSRH_USERNAME"))
 println(OSSRHusername)
- println(OSSRHpassword)
  println(OSSRHstagingProfileId)
+ println(OSSRHpassword)
 // fun getCurrentVersion() {
 //     if(System.getenv("RELEASE_TAG").toBoolean()) {
 //         project.version = System.getenv("RELEASE_TAG")
