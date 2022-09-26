@@ -101,7 +101,7 @@ afterEvaluate {
             }
         }
     }
-
+    println("here2")
     signing {
         sign(publishing.publications["release"])
     }
