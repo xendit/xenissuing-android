@@ -36,6 +36,8 @@
      signingPassword = System.getenv("SIGNING_PASSWORD") ?: ""
  }
 println(OSSRHusername)
+ println(OSSRHpassword)
+ println(OSSRHstagingProfileId)
 // fun getCurrentVersion() {
 //     if(System.getenv("RELEASE_TAG").toBoolean()) {
 //         project.version = System.getenv("RELEASE_TAG")
