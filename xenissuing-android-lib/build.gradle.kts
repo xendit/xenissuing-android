@@ -7,7 +7,7 @@ plugins {
 
 object AppProp {
     const val group = "com.xendit.xenissuing"
-    const val version = "0.2.4"
+    const val version = "0.2.5"
 }
 
 version = AppProp.version
