@@ -7,7 +7,7 @@ plugins {
 
 object AppProp {
     const val group = "com.xendit.xenissuing"
-    const val version = "0.2.5"
+    const val version = "1.0.0"
 }
 
 version = AppProp.version
@@ -101,13 +101,10 @@ afterEvaluate {
             }
         }
     }
-    println("here2")
     signing {
         sign(publishing.publications["release"])
     }
-
 }
-
 
 dependencies {
     implementation ("org.bouncycastle:bcprov-jdk15on:1.70")
