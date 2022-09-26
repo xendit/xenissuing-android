@@ -30,10 +30,10 @@
      signingPassword = properties.getProperty("signing.password")
  } else {
      // Use system environment variables
-     OSSRHusername = System.getenv("OSSRH_USERNAME")
-     OSSRHpassword = System.getenv("OSSRH_PASSWORD")
-     OSSRHstagingProfileId = System.getenv("SONATYPE_STAGING_PROFILE_ID")
-     signingPassword = System.getenv("SIGNING_PASSWORD")
+     OSSRHusername = System.getenv("OSSRH_USERNAME") ?: ""
+     OSSRHpassword = System.getenv("OSSRH_PASSWORD") ?: ""
+     OSSRHstagingProfileId = System.getenv("SONATYPE_STAGING_PROFILE_ID") ?: ""
+     signingPassword = System.getenv("SIGNING_PASSWORD") ?: ""
  }
 
 // fun getCurrentVersion() {
