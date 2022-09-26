@@ -29,12 +29,15 @@
      OSSRHpassword = properties.getProperty("ossrh.password")
      signingPassword = properties.getProperty("signing.password")
  } else {
+     println("here")
      // Use system environment variables
      OSSRHusername = System.getenv("OSSRH_USERNAME") ?: ""
      OSSRHpassword = System.getenv("OSSRH_PASSWORD") ?: ""
      OSSRHstagingProfileId = System.getenv("SONATYPE_STAGING_PROFILE_ID") ?: ""
      signingPassword = System.getenv("SIGNING_PASSWORD") ?: ""
  }
+
+ println(System.getenv("OSSRH_USERNAME"))
 println(OSSRHusername)
  println(OSSRHpassword)
  println(OSSRHstagingProfileId)
