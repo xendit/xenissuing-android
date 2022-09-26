@@ -60,7 +60,7 @@ class XenCrypt constructor(xenditKey: String) {
             outputStream.write(encryptedSessionKey)
             val byteArray = outputStream.toByteArray();
 
-            return Base64.encodeToString(byteArray, Base64.DEFAULT)
+            return String(BASE64EncoderStream.encode(byteArray))
         } catch (error: SessionIdError) {
             throw SessionIdError(error.message)
         }

@@ -7,11 +7,11 @@ plugins {
 
 object AppProp {
     const val group = "com.xendit.xenissuing"
-    const val version = "0.2.2"
+    const val version = "0.2.4"
 }
 
-group = AppProp.group
 version = AppProp.version
+group = AppProp.group
 
 object Meta {
     const val kotlinVersion = "1.3.70"

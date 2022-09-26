@@ -13,18 +13,44 @@
  tasks.register("clean").configure {
     delete(rootProject.buildDir)
 }
-
- val properties = Properties().apply {
-     load(FileInputStream(File(rootProject.rootDir, "gradle.properties")))
+ val properties = Properties();
+ var OSSRHstagingProfileId = ""
+ var OSSRHusername = ""
+ var OSSRHpassword = ""
+ var signingPassword = ""
+ val file = File(rootProject.rootDir, "local.properties")
+ if (file.exists()) {
+     // Read local.properties file first if it exists
+     properties.apply {
+         load(FileInputStream(file))
+     }
+     OSSRHstagingProfileId = properties.getProperty("ossrh.stagingProfileId")
+     OSSRHusername = properties.getProperty("ossrh.username")
+     OSSRHpassword = properties.getProperty("ossrh.password")
+     signingPassword = properties.getProperty("signing.password")
+ } else {
+     // Use system environment variables
+     OSSRHusername = System.getenv("OSSRH_USERNAME")
+     OSSRHpassword = System.getenv("OSSRH_PASSWORD")
+     OSSRHstagingProfileId = System.getenv("SONATYPE_STAGING_PROFILE_ID")
+     signingPassword = System.getenv("SIGNING_PASSWORD")
  }
+
+// fun getCurrentVersion() {
+//     if(System.getenv("RELEASE_TAG").toBoolean()) {
+//         project.version = System.getenv("RELEASE_TAG")
+//     } else {
+//         project.version = "0.2.3"
+//     }
+// }
 
  nexusPublishing {
      repositories {
          sonatype{
              nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-             stagingProfileId.set(properties.getProperty("ossrh.stagingProfileId"))
-             username.set(properties.getProperty("ossrh.username"))
-             password.set(properties.getProperty("ossrh.password"))
+             stagingProfileId.set(OSSRHstagingProfileId)
+             username.set(OSSRHusername)
+             password.set(OSSRHpassword)
          }
      }
  }
