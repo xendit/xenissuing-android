@@ -35,6 +35,9 @@ jobs:
           OSSRH_USERNAME: xenditcards
           OSSRH_PASSWORD: nB6ykuv5yAlZHTrd5PCg\!
           SONATYPE_STAGING_PROFILE_ID: ff8dcadb0674f
+          
+      - name: Source jar and dokka
+        run: ./gradlew androidSourcesJar javadocJar
 
         # Runs upload, and then closes & releases the repository
       - name: Publish to MavenCentral
