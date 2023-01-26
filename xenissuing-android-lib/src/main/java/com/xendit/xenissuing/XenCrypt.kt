@@ -9,6 +9,8 @@ import com.xendit.xenissuing.utils.AsymmetricCryptography
 import com.xendit.xenissuing.utils.DecryptionError
 import com.xendit.xenissuing.utils.EncryptionError
 import com.xendit.xenissuing.utils.SessionIdError
+import java.io.Serializable
+import java.security.spec.X509EncodedKeySpec
 import java.security.*
 import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
@@ -37,30 +39,12 @@ class XenCrypt constructor(xenditKey: String) {
      */
     fun generateSessionId(sessionKey: String): String{
         try {
-            val ivB64 = this.ivKeyGenerator()
-            val decodedKey: ByteArray = Base64.decode(
-                this.xenditKey,
-                Base64.NO_WRAP
-            )
-
-            val aesKey: SecretKey = SecretKeySpec(decodedKey, 0, decodedKey.size, "AES")
-            val iv: ByteArray = Base64.decode(ivB64, Base64.NO_WRAP)
-            val ivSpec = IvParameterSpec(iv)
-
-            val aeseCipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
-            aeseCipher.init(Cipher.ENCRYPT_MODE, aesKey, ivSpec)
-            val utf8: ByteArray = Base64.decode(
-                sessionKey,
-                Base64.NO_WRAP
-            )
-            val encryptedSessionKey = aeseCipher.doFinal(utf8)
-
-            val outputStream = ByteArrayOutputStream()
-            outputStream.write(iv)
-            outputStream.write(encryptedSessionKey)
-            val byteArray = outputStream.toByteArray();
-
-            return String(BASE64EncoderStream.encode(byteArray))
+            val publicKey = generatePublicKey()
+            val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey)
+            val utf8 = sessionKey.toByteArray(charset("UTF8"))
+            val encryptedSessionKey = cipher.doFinal(utf8)
+            return String(BASE64EncoderStream.encode(encryptedSessionKey))
         } catch (error: SessionIdError) {
             throw SessionIdError(error.message)
         }
@@ -139,5 +123,12 @@ class XenCrypt constructor(xenditKey: String) {
         } catch (error: Exception) {
             throw EncryptionError(error.message)
         }
+    }
+
+    private fun generatePublicKey(): PublicKey {
+        val data: ByteArray = Base64.decode(this.xenditKey, Base64.NO_WRAP)
+        val spec = X509EncodedKeySpec(data)
+        val kf = KeyFactory.getInstance("RSA")
+        return kf.generatePublic(spec)
     }
 }

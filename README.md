@@ -15,7 +15,7 @@ XenCrypt is a module to help you set up encryption between XenIssuing and your a
 To be able to use XenCrypt, you will need to use a private key provided by Xendit.
 
 It includes several methods:
-- `generateSessionId` will encrypt a session key randomly generated used for symmetric encryption with Xenissuing.
+- `generateSessionId` will encrypt a session key randomly generated used for asymmetric encryption with Xenissuing.
 - `encrypt` would be used when setting sensitive data.
 - `decrypt` would be used whenever receiving sensitive data from Xenissuing.
 
@@ -23,7 +23,7 @@ It includes several methods:
 ```android
 import XenCrypt
 try {
-    val xenKey = Base64.encode("BASE64_ENCODED_KEY_PROVIDED_BY_XENDIT")
+    val xenKey = Base64.encode("BASE64_PUBLIC_KEY")
     val xenCrypt = XenCrypt(xenKey);
 
     // sessionKey - randomly generated 32 length string, use xenCrypt.getSessionKey(), or implement own

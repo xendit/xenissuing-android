@@ -54,13 +54,12 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("Test session-id data generation")
     fun generateSessionId() {
-        val xenditKey = generateXenditKey()
-        val xenCrypt = XenCrypt(xenditKey)
+        val validPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArY3DXFJ2M0EHbsD9r+2XgFVtpYEQR5bxnQZVHVxtVzQP8u2cv/1APs2cft+8E682wKGY7SFUEsFsoqxoak7qsfXYL/mOdvQe6XDyNC7N6oo9Zb8dUKtuy8qPb1bVeTbxAwDVUzIdJpiRVI69fAGCW7aF3jTAV7Q+Z5qUTaLUFyKvu3+j8u/A58Nw5fjOENTLHBZRrXhFtQC1eql2O6FiQRJBDACYtzhyFBMyT/B7SKNPkEvLm1w4AQEWxxwL93B8vxstfpatbJJvorJaDEl/glncxJVtZ0lBeB3dkWdro/TrhpPD7CHKlBIUKRfvq1TgmMFs9SP90DxD9l9mE+AUAwIDAQAB"
+        val xenCrypt = XenCrypt(validPublicKey)
         val sessionKey = xenCrypt.getSessionKey()
         val sessionId = xenCrypt.generateSessionId(sessionKey)
         val decodedSessionId: ByteArray = Base64.decode(sessionId, Base64.NO_WRAP)
-
-        assertEquals(decodedSessionId.size, 48)
+        assertEquals(decodedSessionId.size, 256)
     }
 
     @Test
