@@ -69,8 +69,6 @@ class XenCryptUnitTest{
     @DisplayName("Test session-id data generation")
     fun generateSessionId() {
         val validPublicKey = readPublicKeyFile()
-        println("validPublicKey")
-        println(validPublicKey)
         val xenCrypt = XenCrypt(validPublicKey)
         val sessionKey = xenCrypt.getSessionKey()
         val sessionId = xenCrypt.generateSessionId(sessionKey)
