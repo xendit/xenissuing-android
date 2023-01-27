@@ -44,7 +44,7 @@ class XenCrypt constructor(xenditKey: String) {
             cipher.init(Cipher.ENCRYPT_MODE, publicKey)
             val utf8 = sessionKey.toByteArray(charset("UTF8"))
             val encryptedSessionKey = cipher.doFinal(utf8)
-            return String(BASE64EncoderStream.encode(encryptedSessionKey))
+            return String(Base64.encode(encryptedSessionKey, Base64.NO_WRAP))
         } catch (error: SessionIdError) {
             throw SessionIdError(error.message)
         }

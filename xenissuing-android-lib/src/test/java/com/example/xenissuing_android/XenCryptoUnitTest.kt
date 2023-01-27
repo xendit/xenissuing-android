@@ -1,6 +1,10 @@
 package com.example.xenissuing_android
 
 import android.util.Base64
+import com.xendit.xenissuing.XenCrypt
+import com.xendit.xenissuing.utils.DecryptionError
+import com.xendit.xenissuing.utils.EncryptionError
+import com.xendit.xenissuing.utils.WrongPublicKeyError
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.slot
@@ -8,10 +12,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import com.xendit.xenissuing.utils.DecryptionError
-import com.xendit.xenissuing.utils.EncryptionError
-import com.xendit.xenissuing.utils.WrongPublicKeyError
-import com.xendit.xenissuing.XenCrypt
+import java.io.File
+import java.io.InputStream
+
 import java.security.*
 
 fun generateXenditKey(): String {
@@ -20,6 +23,17 @@ fun generateXenditKey(): String {
     secureRandom.nextBytes(byteArray)
     return String(Base64.encode(byteArray, Base64.NO_WRAP))
 }
+
+fun readPublicKeyFile(): String {
+    val inputStream: InputStream = File("src/test/java/com/example/xenissuing_android/resource/publickey.crt").inputStream()
+    val inputString = inputStream.bufferedReader().use { it.readText() }
+    return inputString
+        .replace("-----BEGIN PUBLIC KEY-----", "")
+        .replace("-----END PUBLIC KEY-----", "")
+        .replace("\n", "")
+        .trim();
+}
+
 class XenCryptUnitTest{
     companion object {
         init {
@@ -54,7 +68,9 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("Test session-id data generation")
     fun generateSessionId() {
-        val validPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArY3DXFJ2M0EHbsD9r+2XgFVtpYEQR5bxnQZVHVxtVzQP8u2cv/1APs2cft+8E682wKGY7SFUEsFsoqxoak7qsfXYL/mOdvQe6XDyNC7N6oo9Zb8dUKtuy8qPb1bVeTbxAwDVUzIdJpiRVI69fAGCW7aF3jTAV7Q+Z5qUTaLUFyKvu3+j8u/A58Nw5fjOENTLHBZRrXhFtQC1eql2O6FiQRJBDACYtzhyFBMyT/B7SKNPkEvLm1w4AQEWxxwL93B8vxstfpatbJJvorJaDEl/glncxJVtZ0lBeB3dkWdro/TrhpPD7CHKlBIUKRfvq1TgmMFs9SP90DxD9l9mE+AUAwIDAQAB"
+        val validPublicKey = readPublicKeyFile()
+        println("validPublicKey")
+        println(validPublicKey)
         val xenCrypt = XenCrypt(validPublicKey)
         val sessionKey = xenCrypt.getSessionKey()
         val sessionId = xenCrypt.generateSessionId(sessionKey)
