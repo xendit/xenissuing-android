@@ -25,7 +25,7 @@ fun generateXenditKey(): String {
 }
 
 fun readPublicKeyFile(): String {
-    val inputStream: InputStream = File("src/test/java/com/example/xenissuing_android/resource/publickey.crt").inputStream()
+    val inputStream: InputStream = File("src/test/java/com/example/xenissuing_android/resources/publickey.crt").inputStream()
     val inputString = inputStream.bufferedReader().use { it.readText() }
     return inputString
         .replace("-----BEGIN PUBLIC KEY-----", "")
