@@ -5,7 +5,6 @@ import com.sun.mail.util.BASE64DecoderStream
 import com.sun.mail.util.BASE64EncoderStream
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import com.xendit.xenissuing.utils.AsymmetricCryptography
 import com.xendit.xenissuing.utils.DecryptionError
 import com.xendit.xenissuing.utils.EncryptionError
 import com.xendit.xenissuing.utils.SessionIdError
@@ -22,14 +21,12 @@ import kotlin.Exception
 class XenCrypt constructor(xenditKey: String) {
     private val cipher: Cipher
     private val xenditKey: String
-    private val asymmetricCryptography: AsymmetricCryptography
 
     init {
         Security.addProvider(BouncyCastleProvider())
         this.cipher = Cipher.getInstance(
             "AES/CBC/PKCS7Padding"
         )
-        this.asymmetricCryptography = AsymmetricCryptography(this.cipher)
         this.xenditKey = xenditKey
     }
 
