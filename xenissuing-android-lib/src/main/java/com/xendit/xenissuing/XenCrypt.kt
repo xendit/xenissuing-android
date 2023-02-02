@@ -8,6 +8,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import com.xendit.xenissuing.utils.DecryptionError
 import com.xendit.xenissuing.utils.EncryptionError
 import com.xendit.xenissuing.utils.SessionIdError
+import java.io.File
+import java.io.InputStream
 import java.io.Serializable
 import java.security.spec.X509EncodedKeySpec
 import java.security.*
@@ -18,16 +20,24 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.Exception
 
-class XenCrypt constructor(xenditKey: String) {
+class XenCrypt constructor(xenditKey: String? = "", filePath: String? = "") {
     private val cipher: Cipher
-    private val xenditKey: String
+    private val xenditPublicKey: PublicKey
 
     init {
         Security.addProvider(BouncyCastleProvider())
         this.cipher = Cipher.getInstance(
             "AES/CBC/PKCS7Padding"
         )
-        this.xenditKey = xenditKey
+
+        if(filePath?.isNotEmpty() == true){
+            val key = this.readPublicKeyFile(filePath)
+            this.xenditPublicKey = this.generatePublicKey(key)
+        } else if(xenditKey?.isNotEmpty() == true) {
+            this.xenditPublicKey = this.generatePublicKey(xenditKey)
+        } else {
+            throw IllegalArgumentException("xenditKey and filePath is null")
+        }
     }
 
     /**
@@ -36,9 +46,8 @@ class XenCrypt constructor(xenditKey: String) {
      */
     fun generateSessionId(sessionKey: String): String{
         try {
-            val publicKey = generatePublicKey()
             val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey)
+            cipher.init(Cipher.ENCRYPT_MODE, this.xenditPublicKey)
             val utf8 = sessionKey.toByteArray(charset("UTF8"))
             val encryptedSessionKey = cipher.doFinal(utf8)
             return String(Base64.encode(encryptedSessionKey, Base64.NO_WRAP))
@@ -122,10 +131,21 @@ class XenCrypt constructor(xenditKey: String) {
         }
     }
 
-    private fun generatePublicKey(): PublicKey {
-        val data: ByteArray = Base64.decode(this.xenditKey, Base64.NO_WRAP)
+    private fun generatePublicKey(xenditKey: String): PublicKey {
+        val data: ByteArray = Base64.decode(xenditKey, Base64.NO_WRAP)
         val spec = X509EncodedKeySpec(data)
         val kf = KeyFactory.getInstance("RSA")
         return kf.generatePublic(spec)
     }
+
+    private fun readPublicKeyFile(filePath: String): String {
+        val inputStream: InputStream = File(filePath).inputStream()
+        val inputString = inputStream.bufferedReader().use { it.readText() }
+        return inputString
+            .replace("-----BEGIN PUBLIC KEY-----", "")
+            .replace("-----END PUBLIC KEY-----", "")
+            .replace("\n", "")
+            .trim();
+    }
+
 }

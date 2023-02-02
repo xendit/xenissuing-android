@@ -14,18 +14,13 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.io.InputStream
-
 import java.security.*
 
-fun generateXenditKey(): String {
-    val secureRandom = SecureRandom.getInstance("SHA1PRNG")
-    val byteArray = ByteArray(32)
-    secureRandom.nextBytes(byteArray)
-    return String(Base64.encode(byteArray, Base64.NO_WRAP))
-}
+const val filePath  = "src/test/java/com/example/xenissuing_android/resources/publickey.crt"
+val xenditPublicKey = readPublicKeyFile(filePath)
 
-fun readPublicKeyFile(): String {
-    val inputStream: InputStream = File("src/test/java/com/example/xenissuing_android/resources/publickey.crt").inputStream()
+fun readPublicKeyFile(pathName: String): String {
+    val inputStream: InputStream = File(pathName).inputStream()
     val inputString = inputStream.bufferedReader().use { it.readText() }
     return inputString
         .replace("-----BEGIN PUBLIC KEY-----", "")
@@ -66,9 +61,9 @@ class XenCryptUnitTest{
     }
 
     @Test
-    @DisplayName("Test session-id data generation")
-    fun generateSessionId() {
-        val validPublicKey = readPublicKeyFile()
+    @DisplayName("Test session-id data generation from string")
+    fun generateSessionIdFromKeyString() {
+        val validPublicKey = xenditPublicKey
         val xenCrypt = XenCrypt(validPublicKey)
         val sessionKey = xenCrypt.getSessionKey()
         val sessionId = xenCrypt.generateSessionId(sessionKey)
@@ -77,9 +72,29 @@ class XenCryptUnitTest{
     }
 
     @Test
+    @DisplayName("Test session-id data generation from path name")
+    fun generateSessionIdFromPathname() {
+        val xenCrypt = XenCrypt(null, filePath)
+        val sessionKey = xenCrypt.getSessionKey()
+        val sessionId = xenCrypt.generateSessionId(sessionKey)
+        val decodedSessionId: ByteArray = Base64.decode(sessionId, Base64.NO_WRAP)
+        assertEquals(decodedSessionId.size, 256)
+    }
+    @Test
+    @DisplayName("Test session-id should throw error")
+    fun generateSessionId() {
+      try {
+          XenCrypt(null, null)
+      } catch (exception: IllegalArgumentException){
+          assertEquals(exception.message, "xenditKey and filePath is null")
+      }
+    }
+
+
+    @Test
     @DisplayName("should decrypt plain text")
     fun decrypt() {
-        val xenditKey = generateXenditKey()
+        val xenditKey = xenditPublicKey
         val plain = "test"
         val xenCrypt = XenCrypt(xenditKey)
         val sessionKey = xenCrypt.getSessionKey()
@@ -90,10 +105,11 @@ class XenCryptUnitTest{
         assertEquals(decrypted, plain)
     }
 
+
     @Test
     @DisplayName("should not decrypt plain text if provided different session key then was provided during encryption")
     fun decryptWithWrongPrivatKey() {
-        val xenditKey = generateXenditKey()
+        val xenditKey = xenditPublicKey
         val plain = "test"
         val xenCrypt = XenCrypt(xenditKey)
         val privateEncryptionKey = xenCrypt.getSessionKey()
@@ -111,7 +127,7 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("should not decrypt plain text if provided different iv then was provided during encryption")
     fun decryptWithWrongIv() {
-        val xenditKey = generateXenditKey()
+        val xenditKey = xenditPublicKey
         val plain = "test"
         val xenCrypt = XenCrypt(xenditKey)
         val privateKey = xenCrypt.getSessionKey()
@@ -129,7 +145,7 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("should throw an error if passed wrong public key")
     fun insertWrongPublicKey() {
-        val xenditKey = generateXenditKey()
+        val xenditKey = xenditPublicKey
         try {
             XenCrypt(xenditKey)
         } catch (error: WrongPublicKeyError) {
@@ -141,7 +157,7 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("should throw an error during decryption if the provided session key is more than 32 bytes")
     fun insertWrongPrivateKey() {
-        val xenditKey = generateXenditKey()
+        val xenditKey = xenditPublicKey
         val plain = "test"
         val xenCrypt = XenCrypt(xenditKey)
 
@@ -163,7 +179,7 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("should not decrypt plain text if the provided during decryption iv is not encoded")
     fun insertWrongIv() {
-        val xenditKey = generateXenditKey()
+        val xenditKey = xenditPublicKey
         val plain = "test"
         val xenCrypt = XenCrypt(xenditKey)
 
