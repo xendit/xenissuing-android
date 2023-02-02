@@ -43,6 +43,14 @@ try {
 }
 ```
 
+``` android
+// You can also initiate XenCrypt using file path name
+
+    val xenditPublicKeyPathFileName = "src/path_to_file/publickey.crt"
+    val xenCrypt = XenCrypt(null, xenditPublicKeyPathFileName)
+
+```
+
 ``` 
 // Example of valid xenKey
 
