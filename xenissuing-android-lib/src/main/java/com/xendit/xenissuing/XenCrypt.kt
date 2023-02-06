@@ -21,14 +21,11 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.Exception
 
 class XenCrypt constructor(xenditKey: String? = "", filePath: String? = "") {
-    private val cipher: Cipher
     private val xenditPublicKey: PublicKey
+    private val sessionKey: String = getSessionKey();
 
     init {
         Security.addProvider(BouncyCastleProvider())
-        this.cipher = Cipher.getInstance(
-            "AES/CBC/PKCS7Padding"
-        )
 
         if(filePath?.isNotEmpty() == true){
             val key = this.readPublicKeyFile(filePath)
@@ -44,11 +41,11 @@ class XenCrypt constructor(xenditKey: String? = "", filePath: String? = "") {
      * Returns generated Session ID using Private Xendit Key
      * @param {string} sessionKey base64 encoded session key.
      */
-    fun generateSessionId(sessionKey: String): String{
+    fun generateSessionId(): String{
         try {
             val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
             cipher.init(Cipher.ENCRYPT_MODE, this.xenditPublicKey)
-            val utf8 = sessionKey.toByteArray(charset("UTF8"))
+            val utf8 = this.sessionKey.toByteArray(charset("UTF8"))
             val encryptedSessionKey = cipher.doFinal(utf8)
             return String(Base64.encode(encryptedSessionKey, Base64.NO_WRAP))
         } catch (error: SessionIdError) {
@@ -63,13 +60,13 @@ class XenCrypt constructor(xenditKey: String? = "", filePath: String? = "") {
      * @param {string} sessionKeyB64 base64 encoded session key used for encryption.
      */
     @Throws(DecryptionError::class, AEADBadTagException::class)
-    fun decrypt(secret: String, iv: String, sessionKey: String): String{
+    fun decrypt(secret: String, iv: String): String{
         try {
             val aesdCipher = Cipher.getInstance("AES/GCM/NoPadding")
             val iv1: ByteArray = Base64.decode(iv, Base64.NO_WRAP)
             val ivSpec = IvParameterSpec(iv1)
             val decodedKey: ByteArray = Base64.decode(
-                sessionKey,
+                this.sessionKey,
                 Base64.NO_WRAP
             ) // SESSION-KEY is the key generated at client side and passed during request i.e. 32 character random string
 
@@ -95,13 +92,6 @@ class XenCrypt constructor(xenditKey: String? = "", filePath: String? = "") {
         return String(Base64.encode(byteArray, Base64.NO_WRAP))
     }
 
-    @Throws(Exception::class)
-    fun getSessionKey(): String {
-        val secureRandom = SecureRandom.getInstance("SHA1PRNG")
-        val byteArray = ByteArray(24)
-        secureRandom.nextBytes(byteArray)
-        return String(Base64.encode(byteArray, Base64.NO_WRAP))
-    }
 
     /**
      * Returns encrypted secret in base64.
@@ -110,10 +100,10 @@ class XenCrypt constructor(xenditKey: String? = "", filePath: String? = "") {
      * @param {string} iv initialization vector in bytes.
      */
     @Throws(EncryptionError::class, InvalidAlgorithmParameterException::class)
-    fun encryption(plain: String, sessionKey: String, ivB64: String): String {
+    fun encryption(plain: String, ivB64: String): String {
         try {
             val decodedKey: ByteArray = Base64.decode(
-                sessionKey,
+                this.sessionKey,
                 Base64.NO_WRAP
             )  // use 32 characters session key generated at first step
 
@@ -146,6 +136,14 @@ class XenCrypt constructor(xenditKey: String? = "", filePath: String? = "") {
             .replace("-----END PUBLIC KEY-----", "")
             .replace("\n", "")
             .trim();
+    }
+
+    @Throws(Exception::class)
+    private fun getSessionKey(): String {
+        val secureRandom = SecureRandom.getInstance("SHA1PRNG")
+        val byteArray = ByteArray(24)
+        secureRandom.nextBytes(byteArray)
+        return String(Base64.encode(byteArray, Base64.NO_WRAP))
     }
 
 }

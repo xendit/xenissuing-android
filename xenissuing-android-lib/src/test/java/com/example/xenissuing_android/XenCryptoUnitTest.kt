@@ -65,8 +65,7 @@ class XenCryptUnitTest{
     fun generateSessionIdFromKeyString() {
         val validPublicKey = xenditPublicKey
         val xenCrypt = XenCrypt(validPublicKey)
-        val sessionKey = xenCrypt.getSessionKey()
-        val sessionId = xenCrypt.generateSessionId(sessionKey)
+        val sessionId = xenCrypt.generateSessionId()
         val decodedSessionId: ByteArray = Base64.decode(sessionId, Base64.NO_WRAP)
         assertEquals(decodedSessionId.size, 256)
     }
@@ -75,8 +74,7 @@ class XenCryptUnitTest{
     @DisplayName("Test session-id data generation from path name")
     fun generateSessionIdFromPathname() {
         val xenCrypt = XenCrypt(null, filePath)
-        val sessionKey = xenCrypt.getSessionKey()
-        val sessionId = xenCrypt.generateSessionId(sessionKey)
+        val sessionId = xenCrypt.generateSessionId()
         val decodedSessionId: ByteArray = Base64.decode(sessionId, Base64.NO_WRAP)
         assertEquals(decodedSessionId.size, 256)
     }
@@ -97,31 +95,10 @@ class XenCryptUnitTest{
         val xenditKey = xenditPublicKey
         val plain = "test"
         val xenCrypt = XenCrypt(xenditKey)
-        val sessionKey = xenCrypt.getSessionKey()
         val iv = xenCrypt.ivKeyGenerator()
-        val encryptedSecret = xenCrypt.encryption(plain, sessionKey, iv)
-
-        val decrypted = xenCrypt.decrypt(encryptedSecret, iv, sessionKey)
+        val encryptedSecret = xenCrypt.encryption(plain, iv)
+        val decrypted = xenCrypt.decrypt(encryptedSecret, iv)
         assertEquals(decrypted, plain)
-    }
-
-
-    @Test
-    @DisplayName("should not decrypt plain text if provided different session key then was provided during encryption")
-    fun decryptWithWrongPrivatKey() {
-        val xenditKey = xenditPublicKey
-        val plain = "test"
-        val xenCrypt = XenCrypt(xenditKey)
-        val privateEncryptionKey = xenCrypt.getSessionKey()
-        val privateDecryptionKey = xenCrypt.getSessionKey()
-        val iv = xenCrypt.ivKeyGenerator()
-        val encryptedSecret = xenCrypt.encryption(plain, privateEncryptionKey, iv)
-
-        try {
-            xenCrypt.decrypt(encryptedSecret, iv, privateDecryptionKey)
-        } catch (error: DecryptionError) {
-            assertEquals(error.message, "Failed to decrypt: mac check in GCM failed")
-        }
     }
 
     @Test
@@ -130,13 +107,12 @@ class XenCryptUnitTest{
         val xenditKey = xenditPublicKey
         val plain = "test"
         val xenCrypt = XenCrypt(xenditKey)
-        val privateKey = xenCrypt.getSessionKey()
         val iv = xenCrypt.ivKeyGenerator()
         val secondIv = xenCrypt.ivKeyGenerator()
-        val encryptedSecret = xenCrypt.encryption(plain, privateKey, iv)
+        val encryptedSecret = xenCrypt.encryption(plain, iv)
 
         try {
-            xenCrypt.decrypt(encryptedSecret, secondIv, privateKey)
+            xenCrypt.decrypt(encryptedSecret, secondIv)
         } catch (error: DecryptionError) {
             assertEquals(error.message, "Failed to decrypt: mac check in GCM failed")
         }
@@ -170,7 +146,7 @@ class XenCryptUnitTest{
         val iv = xenCrypt.ivKeyGenerator()
 
         try {
-            xenCrypt.encryption(plain, privateKey, iv)
+            xenCrypt.encryption(plain, iv)
         } catch (error: EncryptionError) {
             error.message?.contains("Failed to encrypt")?.let { assertTrue(it) }
         }
@@ -183,7 +159,6 @@ class XenCryptUnitTest{
         val plain = "test"
         val xenCrypt = XenCrypt(xenditKey)
 
-        val privateKey = xenCrypt.getSessionKey()
         // Generate wrong iv
         val secureRandom = SecureRandom.getInstance("SHA1PRNG")
         val byteArray = ByteArray(16)
@@ -191,7 +166,7 @@ class XenCryptUnitTest{
         val iv = String(byteArray)
 
         try {
-            xenCrypt.encryption(plain, privateKey, iv)
+            xenCrypt.encryption(plain, iv)
         } catch (error: EncryptionError) {
             error.message?.contains("Failed to encrypt")?.let { assertTrue(it) }
         }

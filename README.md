@@ -29,15 +29,13 @@ try {
     val xenKey = Base64.encode("BASE64_PUBLIC_KEY")
     val xenCrypt = XenCrypt(xenKey);
 
-    // sessionKey - randomly generated 32 length string, use xenCrypt.getSessionKey(), or implement own
-
-    val sessionId = xenCrypt.generateSessionId(sessionKey)
+    val sessionId = xenCrypt.generateSessionId()
     
     // plain - plain text to be encrypted (cvv2 ect..)
     
-    val encrypted = xenCrypt.encryption(plain, privateKey, iv)
+    val encrypted = xenCrypt.encryption(plain, iv)
 
-    val decrypted = xenCrypt.decrypt(secret, iv, privateKey);
+    val decrypted = xenCrypt.decrypt(secret, iv);
 } catch (error: Exception) {
     throw error
 }
