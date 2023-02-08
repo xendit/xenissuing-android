@@ -1,7 +1,7 @@
 package com.example.xenissuing_android
 
 import android.util.Base64
-import com.xendit.xenissuing.XenCrypt
+import com.xendit.xenissuing.XenIssuing
 import com.xendit.xenissuing.utils.DecryptionError
 import com.xendit.xenissuing.utils.EncryptionError
 import com.xendit.xenissuing.utils.WrongPublicKeyError
@@ -64,8 +64,8 @@ class XenCryptUnitTest{
     @DisplayName("Test session-id data generation from string")
     fun generateSessionIdFromKeyString() {
         val validPublicKey = xenditPublicKey
-        val xenCrypt = XenCrypt(validPublicKey)
-        val sessionId = xenCrypt.generateSessionId()
+        val xenIssuing = XenIssuing(validPublicKey)
+        val sessionId = xenIssuing.generateSessionId()
         val decodedSessionId: ByteArray = Base64.decode(sessionId, Base64.NO_WRAP)
         assertEquals(decodedSessionId.size, 256)
     }
@@ -73,8 +73,8 @@ class XenCryptUnitTest{
     @Test
     @DisplayName("Test session-id data generation from path name")
     fun generateSessionIdFromPathname() {
-        val xenCrypt = XenCrypt(null, filePath)
-        val sessionId = xenCrypt.generateSessionId()
+        val xenIssuing = XenIssuing(null, filePath)
+        val sessionId = xenIssuing.generateSessionId()
         val decodedSessionId: ByteArray = Base64.decode(sessionId, Base64.NO_WRAP)
         assertEquals(decodedSessionId.size, 256)
     }
@@ -82,7 +82,7 @@ class XenCryptUnitTest{
     @DisplayName("Test session-id should throw error")
     fun generateSessionId() {
       try {
-          XenCrypt(null, null)
+          XenIssuing(null, null)
       } catch (exception: IllegalArgumentException){
           assertEquals(exception.message, "xenditKey and filePath is null")
       }
@@ -94,10 +94,10 @@ class XenCryptUnitTest{
     fun decrypt() {
         val xenditKey = xenditPublicKey
         val plain = "test"
-        val xenCrypt = XenCrypt(xenditKey)
-        val iv = xenCrypt.ivKeyGenerator()
-        val encryptedSecret = xenCrypt.encryption(plain, iv)
-        val decrypted = xenCrypt.decrypt(encryptedSecret, iv)
+        val xenIssuing = XenIssuing(xenditKey)
+        val iv = xenIssuing.ivKeyGenerator()
+        val encryptedSecret = xenIssuing.encryption(plain, iv)
+        val decrypted = xenIssuing.decrypt(encryptedSecret, iv)
         assertEquals(decrypted, plain)
     }
 
@@ -106,13 +106,13 @@ class XenCryptUnitTest{
     fun decryptWithWrongIv() {
         val xenditKey = xenditPublicKey
         val plain = "test"
-        val xenCrypt = XenCrypt(xenditKey)
-        val iv = xenCrypt.ivKeyGenerator()
-        val secondIv = xenCrypt.ivKeyGenerator()
-        val encryptedSecret = xenCrypt.encryption(plain, iv)
+        val xenIssuing = XenIssuing(xenditKey)
+        val iv = xenIssuing.ivKeyGenerator()
+        val secondIv = xenIssuing.ivKeyGenerator()
+        val encryptedSecret = xenIssuing.encryption(plain, iv)
 
         try {
-            xenCrypt.decrypt(encryptedSecret, secondIv)
+            xenIssuing.decrypt(encryptedSecret, secondIv)
         } catch (error: DecryptionError) {
             assertEquals(error.message, "Failed to decrypt: mac check in GCM failed")
         }
@@ -123,7 +123,7 @@ class XenCryptUnitTest{
     fun insertWrongPublicKey() {
         val xenditKey = xenditPublicKey
         try {
-            XenCrypt(xenditKey)
+            XenIssuing(xenditKey)
         } catch (error: WrongPublicKeyError) {
             error.message?.contains("Something happen while decoding publicKey")
                 ?.let { assertTrue(it) }
@@ -135,7 +135,7 @@ class XenCryptUnitTest{
     fun insertWrongPrivateKey() {
         val xenditKey = xenditPublicKey
         val plain = "test"
-        val xenCrypt = XenCrypt(xenditKey)
+        val xenIssuing = XenIssuing(xenditKey)
 
         val secureRandom = SecureRandom.getInstance("SHA1PRNG")
         // Wrong length
@@ -143,10 +143,10 @@ class XenCryptUnitTest{
         secureRandom.nextBytes(byteArray)
         val privateKey = String(Base64.encode(byteArray, Base64.NO_WRAP))
 
-        val iv = xenCrypt.ivKeyGenerator()
+        val iv = xenIssuing.ivKeyGenerator()
 
         try {
-            xenCrypt.encryption(plain, iv)
+            xenIssuing.encryption(plain, iv)
         } catch (error: EncryptionError) {
             error.message?.contains("Failed to encrypt")?.let { assertTrue(it) }
         }
@@ -157,7 +157,7 @@ class XenCryptUnitTest{
     fun insertWrongIv() {
         val xenditKey = xenditPublicKey
         val plain = "test"
-        val xenCrypt = XenCrypt(xenditKey)
+        val xenIssuing = XenIssuing(xenditKey)
 
         // Generate wrong iv
         val secureRandom = SecureRandom.getInstance("SHA1PRNG")
@@ -166,7 +166,7 @@ class XenCryptUnitTest{
         val iv = String(byteArray)
 
         try {
-            xenCrypt.encryption(plain, iv)
+            xenIssuing.encryption(plain, iv)
         } catch (error: EncryptionError) {
             error.message?.contains("Failed to encrypt")?.let { assertTrue(it) }
         }

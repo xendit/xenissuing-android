@@ -3,14 +3,12 @@ package com.xendit.xenissuing
 import android.util.Base64
 import com.sun.mail.util.BASE64DecoderStream
 import com.sun.mail.util.BASE64EncoderStream
-import org.apache.commons.io.output.ByteArrayOutputStream
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import com.xendit.xenissuing.utils.DecryptionError
 import com.xendit.xenissuing.utils.EncryptionError
 import com.xendit.xenissuing.utils.SessionIdError
 import java.io.File
 import java.io.InputStream
-import java.io.Serializable
 import java.security.spec.X509EncodedKeySpec
 import java.security.*
 import javax.crypto.AEADBadTagException
@@ -20,7 +18,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.Exception
 
-class XenCrypt constructor(xenditKey: String? = "", filePath: String? = "") {
+class XenIssuing constructor(xenditKey: String? = "", filePath: String? = "") {
     private val xenditPublicKey: PublicKey
     private val sessionKey: String = getSessionKey();
 

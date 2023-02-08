@@ -4,15 +4,15 @@
 # Xenissuing
 
 This SDK comprises of the following modules :
-- XenCrypt: this module handles encryption between XenIssuing and your Android application.
+- XenIssuing: this module handles encryption between XenIssuing and your Android application.
 
-## XenCrypt
+## XenIssuing
 
-XenCrypt is a module to help you set up encryption between XenIssuing and your application.
+XenIssuing is a module to help you set up encryption between XenIssuing and your application.
 
 ### Requirements
 
-To be able to use XenCrypt, you will need to use a private key provided by Xendit.
+To be able to use XenIssuing, you will need to use a private key provided by Xendit.
 
 It includes several methods:
 - `generateSessionId` will encrypt a session key randomly generated used for asymmetric encryption with Xenissuing.
@@ -21,21 +21,21 @@ It includes several methods:
 
 ### Usage
 ```android
-import XenCrypt
+import XenIssuing
 try {
 
     // xenKey is base64 encoded portion without headers and footers *(see example bellow)
 
     val xenKey = Base64.encode("BASE64_PUBLIC_KEY")
-    val xenCrypt = XenCrypt(xenKey);
+    val xenIssuing = XenIssuing(xenKey);
 
-    val sessionId = xenCrypt.generateSessionId()
+    val sessionId = xenIssuing.generateSessionId()
     
     // plain - plain text to be encrypted (cvv2 ect..)
     
-    val encrypted = xenCrypt.encryption(plain, iv)
+    val encrypted = xenIssuing.encryption(plain, iv)
 
-    val decrypted = xenCrypt.decrypt(secret, iv);
+    val decrypted = xenIssuing.decrypt(secret, iv);
 } catch (error: Exception) {
     throw error
 }
@@ -45,7 +45,7 @@ try {
 // You can also initiate XenCrypt using file path name
 
     val xenditPublicKeyPathFileName = "src/path_to_file/publickey.crt"
-    val xenCrypt = XenCrypt(null, xenditPublicKeyPathFileName)
+    val xenIssuing = XenIssuing(null, xenditPublicKeyPathFileName)
 
 ```
 
