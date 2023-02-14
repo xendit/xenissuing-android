@@ -62,25 +62,25 @@ class XenCryptUnitTest{
 
     @Test
     @DisplayName("Test session-id data generation from string")
-    fun generateSessionIdFromKeyString() {
+    fun generateKeyFromKeyString() {
         val validPublicKey = xenditPublicKey
         val xenIssuing = XenIssuing(validPublicKey)
-        val sessionId = xenIssuing.generateSessionId()
-        val decodedSessionId: ByteArray = Base64.decode(sessionId, Base64.NO_WRAP)
+        val key = xenIssuing.getKey()
+        val decodedSessionId: ByteArray = Base64.decode(key, Base64.NO_WRAP)
         assertEquals(decodedSessionId.size, 256)
     }
 
     @Test
     @DisplayName("Test session-id data generation from path name")
-    fun generateSessionIdFromPathname() {
+    fun generateKeyFromPathname() {
         val xenIssuing = XenIssuing(null, filePath)
-        val sessionId = xenIssuing.generateSessionId()
-        val decodedSessionId: ByteArray = Base64.decode(sessionId, Base64.NO_WRAP)
+        val key = xenIssuing.getKey()
+        val decodedSessionId: ByteArray = Base64.decode(key, Base64.NO_WRAP)
         assertEquals(decodedSessionId.size, 256)
     }
     @Test
     @DisplayName("Test session-id should throw error")
-    fun generateSessionId() {
+    fun generateKeyInvalidParams() {
       try {
           XenIssuing(null, null)
       } catch (exception: IllegalArgumentException){
@@ -91,13 +91,13 @@ class XenCryptUnitTest{
 
     @Test
     @DisplayName("should decrypt plain text")
-    fun decrypt() {
+    fun decryptTheCardData() {
         val xenditKey = xenditPublicKey
         val plain = "test"
         val xenIssuing = XenIssuing(xenditKey)
         val iv = xenIssuing.ivKeyGenerator()
         val encryptedSecret = xenIssuing.encryption(plain, iv)
-        val decrypted = xenIssuing.decrypt(encryptedSecret, iv)
+        val decrypted = xenIssuing.decryptCardData(encryptedSecret, iv)
         assertEquals(decrypted, plain)
     }
 
@@ -112,7 +112,7 @@ class XenCryptUnitTest{
         val encryptedSecret = xenIssuing.encryption(plain, iv)
 
         try {
-            xenIssuing.decrypt(encryptedSecret, secondIv)
+            xenIssuing.decryptCardData(encryptedSecret, secondIv)
         } catch (error: DecryptionError) {
             assertEquals(error.message, "Failed to decrypt: mac check in GCM failed")
         }

@@ -15,9 +15,9 @@ XenIssuing is a module to help you set up encryption between XenIssuing and your
 To be able to use XenIssuing, you will need to use a private key provided by Xendit.
 
 It includes several methods:
-- `generateSessionId` will encrypt a session key randomly generated used for asymmetric encryption with Xenissuing.
+- `getKey` will encrypt a session key randomly generated used for asymmetric encryption with Xenissuing.
 - `encrypt` would be used when setting sensitive data.
-- `decrypt` would be used whenever receiving sensitive data from Xenissuing.
+- `decryptCardData` would be used whenever receiving sensitive card data from Xenissuing.
 
 ### Usage
 ```android
@@ -29,13 +29,14 @@ try {
     val xenKey = Base64.encode("BASE64_PUBLIC_KEY")
     val xenIssuing = XenIssuing(xenKey);
 
-    val sessionId = xenIssuing.generateSessionId()
+    // you can make an API call using this key
+    val key = xenIssuing.getKey()
     
     // plain - plain text to be encrypted (cvv2 ect..)
     
     val encrypted = xenIssuing.encryption(plain, iv)
 
-    val decrypted = xenIssuing.decrypt(secret, iv);
+    val decrypted = xenIssuing.decryptCardData(secret, iv);
 } catch (error: Exception) {
     throw error
 }

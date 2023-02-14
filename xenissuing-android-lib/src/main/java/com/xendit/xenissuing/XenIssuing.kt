@@ -39,7 +39,7 @@ class XenIssuing constructor(xenditKey: String? = "", filePath: String? = "") {
      * Returns generated Session ID using Private Xendit Key
      * @param {string} sessionKey base64 encoded session key.
      */
-    fun generateSessionId(): String{
+    fun getKey(): String{
         try {
             val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
             cipher.init(Cipher.ENCRYPT_MODE, this.xenditPublicKey)
@@ -58,7 +58,7 @@ class XenIssuing constructor(xenditKey: String? = "", filePath: String? = "") {
      * @param {string} sessionKeyB64 base64 encoded session key used for encryption.
      */
     @Throws(DecryptionError::class, AEADBadTagException::class)
-    fun decrypt(secret: String, iv: String): String{
+    fun decryptCardData(secret: String, iv: String): String{
         try {
             val aesdCipher = Cipher.getInstance("AES/GCM/NoPadding")
             val iv1: ByteArray = Base64.decode(iv, Base64.NO_WRAP)
