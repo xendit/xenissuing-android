@@ -18,7 +18,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.Exception
 
-class XenIssuing constructor(xenditKey: String? = "", filePath: String? = "") {
+class SecureSession constructor(xenditKey: String? = "", filePath: String? = "") {
     private val xenditPublicKey: PublicKey
     private val sessionKey: String = getSessionKey();
 

@@ -6,9 +6,9 @@
 This SDK comprises of the following modules :
 - XenIssuing: this module handles encryption between XenIssuing and your Android application.
 
-## XenIssuing
+## SecureSession
 
-XenIssuing is a module to help you set up encryption between XenIssuing and your application.
+SecureSession is a module to help you set up encryption between XenIssuing and your application.
 
 ### Requirements
 
@@ -21,22 +21,22 @@ It includes several methods:
 
 ### Usage
 ```android
-import XenIssuing
+import SecureSession
 try {
 
     // xenKey is base64 encoded portion without headers and footers *(see example bellow)
 
     val xenKey = Base64.encode("BASE64_PUBLIC_KEY")
-    val xenIssuing = XenIssuing(xenKey);
+    val session = SecureSession(xenKey);
 
     // you can make an API call using this key
-    val key = xenIssuing.getKey()
+    val key = session.getKey()
     
     // plain - plain text to be encrypted (cvv2 ect..)
     
-    val encrypted = xenIssuing.encryption(plain, iv)
+    val encrypted = session.encryption(plain, iv)
 
-    val decrypted = xenIssuing.decryptCardData(secret, iv);
+    val decrypted = session.decryptCardData(secret, iv);
 } catch (error: Exception) {
     throw error
 }
@@ -46,7 +46,7 @@ try {
 // You can also initiate XenCrypt using file path name
 
     val xenditPublicKeyPathFileName = "src/path_to_file/publickey.crt"
-    val xenIssuing = XenIssuing(null, xenditPublicKeyPathFileName)
+    val session = SecureSession(null, xenditPublicKeyPathFileName)
 
 ```
 
