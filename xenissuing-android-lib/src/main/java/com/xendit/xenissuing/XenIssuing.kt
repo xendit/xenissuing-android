@@ -18,18 +18,16 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.Exception
 
-class SecureSession constructor(xenditKey: String? = "", filePath: String? = "") {
+class SecureSession constructor(xenditKey: String = "") {
     private val xenditPublicKey: PublicKey
-    private val sessionKey: String = getSessionKey();
+    var sessionKey: String
 
     init {
         Security.addProvider(BouncyCastleProvider())
 
-        if(filePath?.isNotEmpty() == true){
-            val key = this.readPublicKeyFile(filePath)
-            this.xenditPublicKey = this.generatePublicKey(key)
-        } else if(xenditKey?.isNotEmpty() == true) {
+        if(xenditKey?.isNotEmpty()) {
             this.xenditPublicKey = this.generatePublicKey(xenditKey)
+            this.sessionKey = this.generateSessionKey();
         } else {
             throw IllegalArgumentException("xenditKey and filePath is null")
         }
@@ -83,40 +81,11 @@ class SecureSession constructor(xenditKey: String? = "", filePath: String? = "")
     }
 
     @Throws(Exception::class)
-    fun ivKeyGenerator(): String {
+    private fun generateSessionKey(): String {
         val secureRandom = SecureRandom.getInstance("SHA1PRNG")
-        val byteArray = ByteArray(16)
+        val byteArray = ByteArray(24)
         secureRandom.nextBytes(byteArray)
         return String(Base64.encode(byteArray, Base64.NO_WRAP))
-    }
-
-
-    /**
-     * Returns encrypted secret in base64.
-     * @param {string} plain secret to encrypt.
-     * @param {string} sessionKey base64 encoded session key used for encryption.
-     * @param {string} iv initialization vector in bytes.
-     */
-    @Throws(EncryptionError::class, InvalidAlgorithmParameterException::class)
-    fun encryption(plain: String, ivB64: String): String {
-        try {
-            val decodedKey: ByteArray = Base64.decode(
-                this.sessionKey,
-                Base64.NO_WRAP
-            )  // use 32 characters session key generated at first step
-
-            val aesKey: SecretKey = SecretKeySpec(decodedKey, 0, decodedKey.size, "AES")
-            val iv: ByteArray = Base64.decode(ivB64, Base64.NO_WRAP)
-            val ivSpec = IvParameterSpec(iv)
-
-            val aeseCipher = Cipher.getInstance("AES/GCM/NoPadding")
-            aeseCipher.init(Cipher.ENCRYPT_MODE, aesKey, ivSpec)
-            val utf8 = plain.toByteArray(charset("UTF8"))
-            val encryptedCVV = aeseCipher.doFinal(utf8)
-            return String(BASE64EncoderStream.encode(encryptedCVV)) // pass encrypted cvv2 in request
-        } catch (error: Exception) {
-            throw EncryptionError(error.message)
-        }
     }
 
     private fun generatePublicKey(xenditKey: String): PublicKey {
@@ -136,12 +105,6 @@ class SecureSession constructor(xenditKey: String? = "", filePath: String? = "")
             .trim();
     }
 
-    @Throws(Exception::class)
-    private fun getSessionKey(): String {
-        val secureRandom = SecureRandom.getInstance("SHA1PRNG")
-        val byteArray = ByteArray(24)
-        secureRandom.nextBytes(byteArray)
-        return String(Base64.encode(byteArray, Base64.NO_WRAP))
-    }
+
 
 }

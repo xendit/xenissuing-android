@@ -1,6 +1,7 @@
 package com.example.xenissuing_android
 
 import android.util.Base64
+import com.sun.mail.util.BASE64EncoderStream
 import com.xendit.xenissuing.SecureSession
 import com.xendit.xenissuing.utils.DecryptionError
 import com.xendit.xenissuing.utils.EncryptionError
@@ -15,6 +16,10 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.io.InputStream
 import java.security.*
+import javax.crypto.Cipher
+import javax.crypto.SecretKey
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 const val filePath  = "src/test/java/com/example/xenissuing_android/resources/publickey.crt"
 val xenditPublicKey = readPublicKeyFile(filePath)
@@ -28,6 +33,45 @@ fun readPublicKeyFile(pathName: String): String {
         .replace("\n", "")
         .trim();
 }
+
+@Throws(Exception::class)
+fun ivKeyGenerator(): String {
+    val secureRandom = SecureRandom.getInstance("SHA1PRNG")
+    val byteArray = ByteArray(16)
+    secureRandom.nextBytes(byteArray)
+    return String(Base64.encode(byteArray, Base64.NO_WRAP))
+}
+
+
+/**
+ * Returns encrypted secret in base64.
+ * @param {string} plain secret to encrypt.
+ * @param {string} sessionKey base64 encoded session key used for encryption.
+ * @param {string} iv initialization vector in bytes.
+ */
+@Throws(EncryptionError::class, InvalidAlgorithmParameterException::class)
+fun encryption(sessionKey: String, plain: String, ivB64: String): String {
+    try {
+        val decodedKey: ByteArray = Base64.decode(
+            sessionKey,
+            Base64.NO_WRAP
+        )  // use 32 characters session key generated at first step
+
+        val aesKey: SecretKey = SecretKeySpec(decodedKey, 0, decodedKey.size, "AES")
+        val iv: ByteArray = Base64.decode(ivB64, Base64.NO_WRAP)
+        val ivSpec = IvParameterSpec(iv)
+
+        val aeseCipher = Cipher.getInstance("AES/GCM/NoPadding")
+        aeseCipher.init(Cipher.ENCRYPT_MODE, aesKey, ivSpec)
+        val utf8 = plain.toByteArray(charset("UTF8"))
+        val encryptedCVV = aeseCipher.doFinal(utf8)
+        return String(BASE64EncoderStream.encode(encryptedCVV)) // pass encrypted cvv2 in request
+    } catch (error: Exception) {
+        throw EncryptionError(error.message)
+    }
+}
+
+
 
 class XenCryptUnitTest{
     companion object {
@@ -71,18 +115,10 @@ class XenCryptUnitTest{
     }
 
     @Test
-    @DisplayName("Test session-id data generation from path name")
-    fun generateKeyFromPathname() {
-        val session = SecureSession(null, filePath)
-        val key = session.getKey()
-        val decodedSessionId: ByteArray = Base64.decode(key, Base64.NO_WRAP)
-        assertEquals(decodedSessionId.size, 256)
-    }
-    @Test
     @DisplayName("Test session-id should throw error")
     fun generateKeyInvalidParams() {
       try {
-          SecureSession(null, null)
+          SecureSession("")
       } catch (exception: IllegalArgumentException){
           assertEquals(exception.message, "xenditKey and filePath is null")
       }
@@ -95,8 +131,8 @@ class XenCryptUnitTest{
         val xenditKey = xenditPublicKey
         val plain = "test"
         val session = SecureSession(xenditKey)
-        val iv = session.ivKeyGenerator()
-        val encryptedSecret = session.encryption(plain, iv)
+        val iv = ivKeyGenerator()
+        val encryptedSecret = encryption(session.sessionKey, plain, iv)
         val decrypted = session.decryptCardData(encryptedSecret, iv)
         assertEquals(decrypted, plain)
     }
@@ -107,9 +143,9 @@ class XenCryptUnitTest{
         val xenditKey = xenditPublicKey
         val plain = "test"
         val session = SecureSession(xenditKey)
-        val iv = session.ivKeyGenerator()
-        val secondIv = session.ivKeyGenerator()
-        val encryptedSecret = session.encryption(plain, iv)
+        val iv = ivKeyGenerator()
+        val secondIv = ivKeyGenerator()
+        val encryptedSecret = encryption(session.sessionKey, plain, iv)
 
         try {
             session.decryptCardData(encryptedSecret, secondIv)
@@ -118,21 +154,10 @@ class XenCryptUnitTest{
         }
     }
 
-    @Test
-    @DisplayName("should throw an error if passed wrong public key")
-    fun insertWrongPublicKey() {
-        val xenditKey = xenditPublicKey
-        try {
-            SecureSession(xenditKey)
-        } catch (error: WrongPublicKeyError) {
-            error.message?.contains("Something happen while decoding publicKey")
-                ?.let { assertTrue(it) }
-        }
-    }
 
     @Test
     @DisplayName("should throw an error during decryption if the provided session key is more than 32 bytes")
-    fun insertWrongPrivateKey() {
+    fun insertWrongSessionKey() {
         val xenditKey = xenditPublicKey
         val plain = "test"
         val session = SecureSession(xenditKey)
@@ -141,12 +166,12 @@ class XenCryptUnitTest{
         // Wrong length
         val byteArray = ByteArray(64)
         secureRandom.nextBytes(byteArray)
-        val privateKey = String(Base64.encode(byteArray, Base64.NO_WRAP))
+        val sessionKey = String(Base64.encode(byteArray, Base64.NO_WRAP))
 
-        val iv = session.ivKeyGenerator()
+        val iv = ivKeyGenerator()
 
         try {
-            session.encryption(plain, iv)
+            encryption(sessionKey, plain, iv)
         } catch (error: EncryptionError) {
             error.message?.contains("Failed to encrypt")?.let { assertTrue(it) }
         }
@@ -157,7 +182,7 @@ class XenCryptUnitTest{
     fun insertWrongIv() {
         val xenditKey = xenditPublicKey
         val plain = "test"
-        val xenIssuing = SecureSession(xenditKey)
+        val session = SecureSession(xenditKey)
 
         // Generate wrong iv
         val secureRandom = SecureRandom.getInstance("SHA1PRNG")
@@ -166,7 +191,7 @@ class XenCryptUnitTest{
         val iv = String(byteArray)
 
         try {
-            xenIssuing.encryption(plain, iv)
+            encryption(session.sessionKey, plain, iv)
         } catch (error: EncryptionError) {
             error.message?.contains("Failed to encrypt")?.let { assertTrue(it) }
         }

@@ -31,23 +31,11 @@ try {
 
     // you can make an API call using this key
     val key = session.getKey()
-    
-    // plain - plain text to be encrypted (cvv2 ect..)
-    
-    val encrypted = session.encryption(plain, iv)
 
-    val decrypted = session.decryptCardData(secret, iv);
+    val cardData = session.decryptCardData(secret, iv);
 } catch (error: Exception) {
     throw error
 }
-```
-
-``` android
-// You can also initiate XenCrypt using file path name
-
-    val xenditPublicKeyPathFileName = "src/path_to_file/publickey.crt"
-    val session = SecureSession(null, xenditPublicKeyPathFileName)
-
 ```
 
 ``` 
