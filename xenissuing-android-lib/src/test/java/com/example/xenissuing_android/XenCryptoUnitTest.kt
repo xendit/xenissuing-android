@@ -71,6 +71,8 @@ class XenCryptUnitTest{
         val validPublicKey = xenditPublicKey
         val session = XenIssuing.createSecureSession(validPublicKey)
         val key = session.getSessionKeyB64()
+        val decodedKey: ByteArray = Base64.decode(key, Base64.NO_WRAP)
+        assertEquals(decodedKey.size, 24)
     }
 
     @Test
