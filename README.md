@@ -17,12 +17,13 @@ import XenIssuing
 try {
     // xenKey is base64 encoded portion without headers and footers *(see example bellow)
     val xenKey = Base64.encode("BASE64_PUBLIC_KEY")
-    val secureSession = XenIssuing.createSecureSession((xenKey);
+    val secureSession = XenIssuing.createSecureSession(xenKey);
+    
     // you can make an API call using this URL encode key
     val key = secureSession.getKey() // ...3AVnPpM0CxhBHgHgX%2F0KYb0vIFg%3D%3D
-    
-    // plain - plain text to be encrypted (cvv2 ect..)
-    
+
+    val secret = apiResponse.secret
+    val iv = apiResponse.iv
     val decrypted = secureSession.decryptCardData(secret, iv);
 } catch (error: Exception) {
     throw error
