@@ -1,7 +1,7 @@
 package com.example.xenissuing_android
 
 import android.util.Base64
-import com.xendit.xenissuing.SecureSession
+import com.xendit.xenissuing.XenIssuing
 import com.xendit.xenissuing.utils.DecryptionError
 import com.xendit.xenissuing.utils.EncryptionError
 import com.xendit.xenissuing.utils.WrongPublicKeyError
@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.io.InputStream
+import java.net.URLDecoder
 import java.security.*
 
 const val filePath  = "src/test/java/com/example/xenissuing_android/resources/publickey.crt"
@@ -59,17 +60,24 @@ class XenCryptUnitTest{
     @DisplayName("Test session-id data generation from string")
     fun generateKey() {
         val validPublicKey = xenditPublicKey
-        val session = SecureSession(validPublicKey)
+        val session = XenIssuing.createSecureSession(validPublicKey)
         val key = session.getKey()
-        val decodedSessionId: ByteArray = Base64.decode(key, Base64.NO_WRAP)
+        val decodedSessionId: ByteArray = Base64.decode(URLDecoder.decode(key, "utf-8"), Base64.NO_WRAP)
         assertEquals(decodedSessionId.size, 256)
+    }
+    @Test
+    @DisplayName("Test to get the base 64 session key")
+    fun getSessionKeyB64() {
+        val validPublicKey = xenditPublicKey
+        val session = XenIssuing.createSecureSession(validPublicKey)
+        val key = session.getSessionKeyB64()
     }
 
     @Test
     @DisplayName("Test session-id should throw error")
     fun generateKeyInvalidParams() {
         try {
-            SecureSession("")
+            XenIssuing.createSecureSession("")
         } catch (exception: IllegalArgumentException){
             assertEquals(exception.message, "xenditKey and filePath is null")
         }
@@ -79,7 +87,7 @@ class XenCryptUnitTest{
     fun decryptTheCardData() {
         val xenditKey = xenditPublicKey
         val plain = "test"
-        val session = SecureSession(xenditKey)
+        val session = XenIssuing.createSecureSession(xenditKey)
         val iv = session.ivKeyGenerator()
         val encryptedSecret = session.encryption(plain, iv)
         val decrypted = session.decryptCardData(encryptedSecret, iv)
@@ -90,7 +98,7 @@ class XenCryptUnitTest{
     fun decryptWithWrongIv() {
         val xenditKey = xenditPublicKey
         val plain = "test"
-        val session = SecureSession(xenditKey)
+        val session = XenIssuing.createSecureSession(xenditKey)
         val iv = session.ivKeyGenerator()
         val secondIv = session.ivKeyGenerator()
         val encryptedSecret = session.encryption(plain, iv)
@@ -107,7 +115,7 @@ class XenCryptUnitTest{
     fun insertWrongPublicKey() {
         val xenditKey = xenditPublicKey
         try {
-            SecureSession(xenditKey)
+            XenIssuing.createSecureSession(xenditKey)
         } catch (error: WrongPublicKeyError) {
             error.message?.contains("Something happen while decoding publicKey")
                 ?.let { assertTrue(it) }
@@ -115,31 +123,11 @@ class XenCryptUnitTest{
     }
 
     @Test
-    @DisplayName("should throw an error during decryption if the provided session key is more than 32 bytes")
-    fun insertWrongPrivateKey() {
-        val xenditKey = xenditPublicKey
-        val plain = "test"
-        val session = SecureSession(xenditKey)
-        val secureRandom = SecureRandom.getInstance("SHA1PRNG")
-        // Wrong length
-        val byteArray = ByteArray(64)
-        secureRandom.nextBytes(byteArray)
-        val privateKey = String(Base64.encode(byteArray, Base64.NO_WRAP))
-
-        val iv = session.ivKeyGenerator()
-
-        try {
-            session.encryption(plain, iv)
-        } catch (error: EncryptionError) {
-            error.message?.contains("Failed to encrypt")?.let { assertTrue(it) }
-        }
-    }
-    @Test
     @DisplayName("should not decrypt plain text if the provided during decryption iv is not encoded")
     fun insertWrongIv() {
         val xenditKey = xenditPublicKey
         val plain = "test"
-        val session = SecureSession(xenditKey)
+        val session = XenIssuing.createSecureSession(xenditKey)
 
         // Generate wrong iv
         val secureRandom = SecureRandom.getInstance("SHA1PRNG")
