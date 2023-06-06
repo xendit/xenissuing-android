@@ -13,28 +13,23 @@ It includes several methods:
 - `decryptCardData` would be used whenever receiving sensitive card data from Xenissuing.
 ### Usage
 ```android
-import SecureSession
+import XenIssuing
 try {
     // xenKey is base64 encoded portion without headers and footers *(see example bellow)
     val xenKey = Base64.encode("BASE64_PUBLIC_KEY")
-    val session = SecureSession(xenKey);
-    // you can make an API call using this key
-    val key = session.getKey()
+    val secureSession = XenIssuing.createSecureSession(xenKey);
     
-    // plain - plain text to be encrypted (cvv2 ect..)
-    
-    val encrypted = session.encryption(plain, iv)
-    val decrypted = session.decryptCardData(secret, iv);
+    // you can make an API call using this URL encode key
+    val key = secureSession.getKey() // ...3AVnPpM0CxhBHgHgX%2F0KYb0vIFg%3D%3D
+
+    val secret = apiResponse.secret
+    val iv = apiResponse.iv
+    val decrypted = secureSession.decryptCardData(secret, iv);
 } catch (error: Exception) {
     throw error
 }
 ```
 
-``` android
-// You can also initiate XenCrypt using file path name
-    val xenditPublicKeyPathFileName = "src/path_to_file/publickey.crt"
-    val session = SecureSession(null, xenditPublicKeyPathFileName)
-```
 
 ``` 
 // Example of valid xenKey
